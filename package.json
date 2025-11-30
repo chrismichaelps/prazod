@@ -1,6 +1,6 @@
 {
   "name": "prazod",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A CLI that keeps your Zod schemas in sync with your Prisma models. It generates modular, type-safe validation files automatically, ensuring your database and application logic stay aligned.",
   "type": "module",
   "main": "./dist/index.js",
