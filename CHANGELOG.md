@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/chrismichaelps/prazod/compare/v1.0.0...v1.0.1) (2025-11-30)
+
+### Bug Fixes
+
+* remove test step from prepublishOnly to fix CI release ([1f8ef88](https://github.com/chrismichaelps/prazod/commit/1f8ef888b895ed7b9befd53cf3224f1397bbed4b))
+
 ## 1.0.0 (2025-11-30)
 
 ### Features
