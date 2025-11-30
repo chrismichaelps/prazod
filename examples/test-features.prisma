@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(ulid())
+  email     String   @unique
+  name      String
+  password  String   @ignore // Should be excluded from Zod schema
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     Post[]
+}
+
+model Post {
+  id        String  @id @default(nanoid(16))
+  title     String
+  content   String
+  published Boolean @default(false)
+  authorId  String
+  author    User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  views     Int     @default(0)
+  metadata  Json    @ignore // Should be excluded from Zod schema
+}
+
+model Product {
+  id          String @id @default(ulid())
+  name        String
+  price       Float
+  description String
+}
+
+model Order {
+  id         String @id @default(nanoid(16))
+  customerId String
+  total      Float
+  status     String
+}
+
+// The following would work with specific databases:
+// MongoDB: auto() function and @db.ObjectId
+// model MongoExample {
+//   id String @id @default(auto()) @map("_id") @db.ObjectId
+// }
+//
+// CockroachDB: sequence() function
+// model CockroachExample {
+//   id Int @id @default(sequence(minValue: 1000, maxValue: 999999))
+// }
+
+// Test @@ignore - this entire model should be excluded
+model TempData {
+  id    Int
+  value String
+
+  @@ignore
+}
+
+// Test another ignored model
+model LegacyUser {
+  userId   Int    @id
+  oldEmail String
+
+  @@ignore
+}

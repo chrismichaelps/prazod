@@ -1,0 +1,82 @@
+{
+  "name": "prazod",
+  "version": "0.1.0",
+  "description": "A CLI that keeps your Zod schemas in sync with your Prisma models. It generates modular, type-safe validation files automatically, ensuring your database and application logic stay aligned.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "prazod": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build && pnpm test && pnpm typecheck"
+  },
+  "keywords": [
+    "prisma",
+    "zod",
+    "effect",
+    "cli",
+    "schema",
+    "validation",
+    "generator",
+    "typescript"
+  ],
+  "author": "Chris M. Pérez",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chrismichaelps/prazod.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chrismichaelps/prazod/issues"
+  },
+  "homepage": "https://github.com/chrismichaelps/prazod#readme",
+  "dependencies": {
+    "effect": "^3.19.8",
+    "@effect/cli": "^0.72.1",
+    "@effect/schema": "^0.75.5",
+    "@effect/platform": "^0.93.5",
+    "@effect/platform-node": "^0.102.0",
+    "@prisma/internals": "^7.0.1",
+    "@prisma/generator-helper": "^7.0.1",
+    "prisma": "^7.0.1",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@typescript-eslint/eslint-plugin": "^8.48.0",
+    "@typescript-eslint/parser": "^8.48.0",
+    "eslint": "^9.39.1",
+    "prettier": "^3.7.3",
+    "tsup": "^8.5.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.14",
+    "@vitest/coverage-v8": "^4.0.14"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@10.24.0"
+}
