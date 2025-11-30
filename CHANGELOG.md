@@ -1,3 +1,9 @@
+## 1.0.0 (2025-11-30)
+
+### Features
+
+* Set up automated release process with semantic-release and GitHub Actions, including initial changelog. ([1f10d91](https://github.com/chrismichaelps/prazod/commit/1f10d91d0ce7ec154a482d9157dffc6beeedd964))
+
 # Changelog
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
