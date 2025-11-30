@@ -30,7 +30,8 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "pnpm build && pnpm test && pnpm typecheck"
+    "prepublishOnly": "pnpm build && pnpm test && pnpm typecheck",
+    "release": "semantic-release"
   },
   "keywords": [
     "prisma",
@@ -53,27 +54,30 @@
   },
   "homepage": "https://github.com/chrismichaelps/prazod#readme",
   "dependencies": {
-    "effect": "^3.19.8",
     "@effect/cli": "^0.72.1",
-    "@effect/schema": "^0.75.5",
     "@effect/platform": "^0.93.5",
     "@effect/platform-node": "^0.102.0",
-    "@prisma/internals": "^7.0.1",
+    "@effect/schema": "^0.75.5",
     "@prisma/generator-helper": "^7.0.1",
+    "@prisma/internals": "^7.0.1",
+    "effect": "^3.19.8",
     "prisma": "^7.0.1",
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@types/node": "^24.10.1",
     "@typescript-eslint/eslint-plugin": "^8.48.0",
     "@typescript-eslint/parser": "^8.48.0",
+    "@vitest/coverage-v8": "^4.0.14",
     "eslint": "^9.39.1",
     "prettier": "^3.7.3",
+    "semantic-release": "^25.0.2",
     "tsup": "^8.5.1",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.14",
-    "@vitest/coverage-v8": "^4.0.14"
+    "vitest": "^4.0.14"
   },
   "engines": {
     "node": ">=22.0.0"
