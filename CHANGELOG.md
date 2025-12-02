@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/chrismichaelps/prazod/compare/v1.0.1...v1.1.0) (2025-12-02)
+
+### Features
+
+* Improve Zod parsing for v3/v4 compatibility and introduce Prisma relation matching, reverse engineering (zod to prisma), and code generation capabilities. ([47db25b](https://github.com/chrismichaelps/prazod/commit/47db25bad8f0238f5340942c44478354454e1334)), closes [#1](https://github.com/chrismichaelps/prazod/issues/1)
+
 ## [1.0.1](https://github.com/chrismichaelps/prazod/compare/v1.0.0...v1.0.1) (2025-11-30)
 
 ### Bug Fixes
