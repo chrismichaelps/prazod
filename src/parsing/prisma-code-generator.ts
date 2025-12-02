@@ -6,7 +6,6 @@
 import type {
   PrismaSchema,
   PrismaModel,
-  PrismaField,
   PrismaFieldType,
   PrismaEnum,
   PrismaDefaultValue,
