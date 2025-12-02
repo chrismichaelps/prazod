@@ -29,6 +29,9 @@ importers:
       effect:
         specifier: ^3.19.8
         version: 3.19.8
+      fuse.js:
+        specifier: ^7.1.0
+        version: 7.1.0
       prisma:
         specifier: ^7.0.1
         version: 7.0.1(@types/react@19.2.7)(magicast@0.3.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
@@ -1687,6 +1690,10 @@ packages:
   function-timeout@1.0.2:
     resolution: {integrity: sha512-939eZS4gJ3htTHAldmyyuzlrD58P03fHG49v2JfFXbV6OhvZKRC9j2yAtdHw/zrp2zXHuv05zMIy40F0ge7spA==}
     engines: {node: '>=18'}
+
+  fuse.js@7.1.0:
+    resolution: {integrity: sha512-trLf4SzuuUxfusZADLINj+dE8clK1frKdmqiJNb1Es75fmI5oY6X2mxLVUciLLjxqw/xr72Dhy+lER6dGd02FQ==}
+    engines: {node: '>=10'}
 
   generate-function@2.3.1:
     resolution: {integrity: sha512-eeB5GfMNeevm/GRYq20ShmsaGcmI81kIX2K9XQx5miC8KdHaC6Jm0qQ8ZNeGOi7wYB8OsdxKs+Y2oVuTFuVwKQ==}
@@ -4686,6 +4693,8 @@ snapshots:
     optional: true
 
   function-timeout@1.0.2: {}
+
+  fuse.js@7.1.0: {}
 
   generate-function@2.3.1:
     dependencies:

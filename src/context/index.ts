@@ -48,6 +48,16 @@ export interface ZodGenerator {
 
 export const ZodGenerator = Context.GenericTag<ZodGenerator>("ZodGenerator");
 
+// PrismaGenerator Service Tag
+export interface PrismaGenerator {
+  readonly generate: (
+    schema: PrismaSchema
+  ) => Effect.Effect<string, GenerationError>;
+  readonly format: (code: string) => Effect.Effect<string, GenerationError>;
+}
+
+export const PrismaGenerator = Context.GenericTag<PrismaGenerator>("PrismaGenerator");
+
 // SyncService Tag
 export interface SyncConfig {
   readonly prismaPath: string;

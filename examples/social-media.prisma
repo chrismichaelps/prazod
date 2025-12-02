@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Comment {
+  id        String    @id
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+}
+
+model Follow {
+  id          String   @id
+  createdAt   DateTime @default(now())
+  followerId  String
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id        String   @id
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Post {
+  id        String    @id
+  content   String
+  imageUrl  String?
+  published Boolean
+  viewCount Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  Comment[] @relation
+  likes     Like[]    @relation
+  tags      PostTag[] @relation
+}
+
+model PostTag {
+  id        String   @id
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Profile {
+  id            String    @id
+  bio           String?
+  avatarUrl     String?
+  coverImageUrl String?
+  website       String?
+  location      String?
+  birthdate     DateTime?
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Tag {
+  id         String    @id
+  name       String    @unique
+  usageCount Int
+  posts      PostTag[] @relation
+}
+
+model User {
+  id          String    @id
+  username    String    @unique
+  email       String    @unique
+  displayName String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  profile     Profile?  @relation
+  posts       Post[]    @relation
+  comments    Comment[] @relation
+  likes       Like[]    @relation
+  following   Follow[]  @relation("UserFollowing")
+  followers   Follow[]  @relation("UserFollowers")
+}

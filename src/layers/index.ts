@@ -7,6 +7,7 @@ import { Layer } from "effect";
 import { FileSystemLive } from "~/adapters/node-file-system";
 import { PrismaParserLive } from "~/parsing/prisma";
 import { ZodGeneratorLive } from "~/parsing/zod";
+import { PrismaGeneratorLive } from "~/adapters/prisma-generator-impl";
 import { SyncService } from "~/context";
 import { makeSyncService } from "~/services/sync";
 export { SyncService };
@@ -16,7 +17,8 @@ export { SyncService };
 const BaseLayer = Layer.mergeAll(
   FileSystemLive,
   PrismaParserLive,
-  ZodGeneratorLive
+  ZodGeneratorLive,
+  PrismaGeneratorLive
 );
 
 // Create SyncService with its dependencies provided
