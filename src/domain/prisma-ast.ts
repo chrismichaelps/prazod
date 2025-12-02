@@ -33,7 +33,8 @@ export type PrismaFieldAttribute =
   | { readonly _tag: "UpdatedAt" }
   | { readonly _tag: "Ignore" }
   | { readonly _tag: "Map"; readonly name: string }
-  | { readonly _tag: "Relation"; readonly relation: PrismaRelation };
+  | { readonly _tag: "Relation"; readonly relation: PrismaRelation }
+  | { readonly _tag: "Native"; readonly value: string };
 
 export interface PrismaField {
   readonly name: string;
@@ -49,12 +50,14 @@ export interface PrismaRelation {
   readonly references: ReadonlyArray<string>;
   readonly onDelete?: "Cascade" | "Restrict" | "NoAction" | "SetNull" | "SetDefault";
   readonly onUpdate?: "Cascade" | "Restrict" | "NoAction" | "SetNull" | "SetDefault";
+  readonly map?: string;
 }
 
 export type PrismaModelAttribute =
   | { readonly _tag: "Id"; readonly fields: ReadonlyArray<string> }
   | { readonly _tag: "Unique"; readonly fields: ReadonlyArray<string>; readonly name?: string }
   | { readonly _tag: "Index"; readonly fields: ReadonlyArray<string>; readonly name?: string }
+  | { readonly _tag: "FullText"; readonly fields: ReadonlyArray<string>; readonly name?: string; readonly map?: string }
   | { readonly _tag: "Ignore" }
   | { readonly _tag: "Schema"; readonly name: string }
   | { readonly _tag: "Map"; readonly name: string };
