@@ -16,7 +16,8 @@ import type {
 import { ZOD_TAGS, ZOD_VALIDATIONS, ZOD_CHECKS } from "./constants";
 
 type ZodTypeDef = {
-  typeName: string;
+  typeName?: string;  // Zod v3
+  type?: string;      // Zod v4 Standard Schema type identifier
   value?: string | number | boolean;
   checks?: ReadonlyArray<{
     kind: string;
@@ -25,12 +26,15 @@ type ZodTypeDef = {
     inclusive?: boolean;
   }>;
   innerType?: z.ZodTypeAny;
-  type?: z.ZodTypeAny;
+  element?: z.ZodTypeAny;  // For wrapped types like arrays
+  shape?: Record<string, z.ZodTypeAny>;  // For objects
   keyType?: z.ZodTypeAny;
   valueType?: z.ZodTypeAny;
   items?: ReadonlyArray<z.ZodTypeAny>;
   options?: ReadonlyArray<z.ZodTypeAny>;
   defaultValue?: () => unknown;
+  values?: unknown[];
+  enum?: Record<string, unknown>;
 };
 
 export function parseZodSchema(schemas: Record<string, z.ZodTypeAny>): ZodSchema {
@@ -44,9 +48,11 @@ export function parseZodSchema(schemas: Record<string, z.ZodTypeAny>): ZodSchema
 
   for (const [name, schema] of Object.entries(schemas)) {
     const def = schema._def as unknown as ZodTypeDef;
+    const typeIdentifier = def.typeName || def.type;
+
     if (schema instanceof z.ZodObject) {
       objects.push(parseZodObject(name, schema, registry));
-    } else if (def.typeName === "ZodNativeEnum" || def.typeName === ZOD_TAGS.ZodEnum) {
+    } else if (typeIdentifier === "enum" || typeIdentifier === "ZodNativeEnum" || typeIdentifier === ZOD_TAGS.ZodEnum) {
       enums.push(parseZodEnum(name, schema));
     }
   }
@@ -80,7 +86,26 @@ function parseZodObject(
 }
 
 function parseZodEnum(name: string, schema: z.ZodTypeAny): ZodEnum {
-  const def = schema._def as unknown as ZodTypeDef & { values?: unknown[]; enum?: Record<string, unknown> };
+  const def = schema._def as unknown as ZodTypeDef;
+
+  // Zod v4 uses _def.values (array) or _def.entries (object)
+  if (def.values && Array.isArray(def.values)) {
+    return {
+      name,
+      values: def.values as string[],
+      ...(schema.description !== undefined && { documentation: schema.description }),
+    };
+  }
+
+  if ((def as any).entries) {
+    return {
+      name,
+      values: Object.keys((def as any).entries),
+      ...(schema.description !== undefined && { documentation: schema.description }),
+    };
+  }
+
+  // Zod v3 uses _def.enum
   const enumObj = def.enum || {};
   const values = Object.values(enumObj).filter((v) => typeof v === "string") as string[];
   return {
@@ -91,69 +116,111 @@ function parseZodEnum(name: string, schema: z.ZodTypeAny): ZodEnum {
 }
 
 function parseZodType(schema: z.ZodTypeAny, registry: Map<z.ZodTypeAny, string>): ZodType {
+  // Handle null/undefined schemas
+  if (!schema) {
+    return { _tag: ZOD_TAGS.ZodUnknown };
+  }
+
   const registeredName = registry.get(schema);
+  const def = schema._def as unknown as ZodTypeDef;
+
+  // Handle lazy schemas - unwrap them first
+  const typeIdentifier = def.typeName || def.type;
+  if (typeIdentifier === "lazy" || typeIdentifier === ZOD_TAGS.ZodLazy) {
+    // For lazy schemas, we need to get the getter function and call it
+    const getter = (def as any).getter;
+    if (getter && typeof getter === "function") {
+      try {
+        const unwrapped = getter();
+        return parseZodType(unwrapped, registry);
+      } catch (e) {
+        // If we can't unwrap, treat as unknown
+        return { _tag: ZOD_TAGS.ZodUnknown };
+      }
+    }
+    return { _tag: ZOD_TAGS.ZodUnknown };
+  }
+
   if (registeredName) {
-    const def = schema._def as unknown as ZodTypeDef;
-    if (def.typeName === "ZodNativeEnum" || def.typeName === ZOD_TAGS.ZodEnum) {
+    if (typeIdentifier === "enum" || typeIdentifier === "ZodNativeEnum" || typeIdentifier === ZOD_TAGS.ZodEnum) {
       return { _tag: ZOD_TAGS.ZodEnum, name: registeredName };
     }
-    if (def.typeName === ZOD_TAGS.ZodObject) {
+    if (typeIdentifier === "object" || typeIdentifier === ZOD_TAGS.ZodObject) {
       return { _tag: ZOD_TAGS.ZodObject, name: registeredName };
     }
   }
 
-  const def = schema._def as unknown as ZodTypeDef;
-
-  switch (def.typeName) {
+  switch (typeIdentifier) {
+    case "string":
     case ZOD_TAGS.ZodString:
       return {
         _tag: ZOD_TAGS.ZodString,
         validations: parseStringValidations(def),
       };
+    case "number":
     case ZOD_TAGS.ZodNumber:
       return {
         _tag: ZOD_TAGS.ZodNumber,
         validations: parseNumberValidations(def),
       };
+    case "boolean":
     case ZOD_TAGS.ZodBoolean:
       return { _tag: ZOD_TAGS.ZodBoolean };
+    case "date":
     case ZOD_TAGS.ZodDate:
       return { _tag: ZOD_TAGS.ZodDate };
+    case "bigint":
     case ZOD_TAGS.ZodBigInt:
       return { _tag: ZOD_TAGS.ZodBigInt };
+    case "literal":
     case ZOD_TAGS.ZodLiteral:
       return { _tag: ZOD_TAGS.ZodLiteral, value: def.value! };
+    case "array":
     case ZOD_TAGS.ZodArray:
-      return { _tag: ZOD_TAGS.ZodArray, element: parseZodType(def.type!, registry) };
+      // Zod v4 uses _def.type for the element type
+      const elementType = (def as any).element || def.type;
+      return { _tag: ZOD_TAGS.ZodArray, element: parseZodType(elementType!, registry) };
+    case "tuple":
     case ZOD_TAGS.ZodTuple:
       return {
         _tag: ZOD_TAGS.ZodTuple,
         items: (def.items || []).map((i) => parseZodType(i, registry)),
       };
+    case "union":
     case ZOD_TAGS.ZodUnion:
       return {
         _tag: ZOD_TAGS.ZodUnion,
         options: (def.options || []).map((o) => parseZodType(o, registry)),
       };
+    case "record":
     case ZOD_TAGS.ZodRecord:
       return {
         _tag: ZOD_TAGS.ZodRecord,
         keyType: parseZodType(def.keyType!, registry),
         valueType: parseZodType(def.valueType!, registry),
       };
+    case "object":
     case ZOD_TAGS.ZodObject:
       return { _tag: ZOD_TAGS.ZodObject, name: "Nested" };
+    case "enum":
     case "ZodNativeEnum":
       return { _tag: ZOD_TAGS.ZodEnum, name: "UnknownEnum" };
+    case "optional":
     case ZOD_TAGS.ZodOptional:
-      return { _tag: ZOD_TAGS.ZodOptional, inner: parseZodType(def.innerType!, registry) };
+      const optionalInner = (def as any).innerType || (def as any).unwrap;
+      return { _tag: ZOD_TAGS.ZodOptional, inner: parseZodType(optionalInner!, registry) };
+    case "nullable":
     case ZOD_TAGS.ZodNullable:
-      return { _tag: ZOD_TAGS.ZodNullable, inner: parseZodType(def.innerType!, registry) };
+      const nullableInner = (def as any).innerType || (def as any).unwrap;
+      return { _tag: ZOD_TAGS.ZodNullable, inner: parseZodType(nullableInner!, registry) };
+    case "default":
     case ZOD_TAGS.ZodDefault:
+      const defaultInner = (def as any).innerType || (def as any).innerSchema;
+      const defaultVal = def.defaultValue;
       return {
         _tag: ZOD_TAGS.ZodDefault,
-        inner: parseZodType(def.innerType!, registry),
-        defaultValue: def.defaultValue ? def.defaultValue() : undefined,
+        inner: parseZodType(defaultInner!, registry),
+        defaultValue: typeof defaultVal === "function" ? defaultVal() : defaultVal,
       };
     default:
       return { _tag: ZOD_TAGS.ZodUnknown };
@@ -257,6 +324,11 @@ function parseNumberValidations(def: ZodTypeDef): NumberValidation[] {
         break;
       case ZOD_CHECKS.finite:
         validations.push({ _tag: ZOD_VALIDATIONS.Finite });
+        break;
+      default:
+        if ((check as any).kind === "int" || (check as any).isInt === true) {
+          validations.push({ _tag: ZOD_VALIDATIONS.Int });
+        }
         break;
     }
   }

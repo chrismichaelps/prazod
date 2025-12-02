@@ -23,6 +23,7 @@ export const ZOD_TAGS = {
   ZodOptional: "ZodOptional",
   ZodNullable: "ZodNullable",
   ZodDefault: "ZodDefault",
+  ZodLazy: "ZodLazy",
 } as const;
 
 export const ZOD_VALIDATIONS = {
@@ -115,6 +116,8 @@ export const PRISMA_TAGS = {
   Default: "Default",
   Relation: "Relation",
   Index: "Index",
+  FullText: "FullText",
   Map: "Map",
+  Native: "Native",
   Schema: "Schema",
 } as const;

@@ -32,6 +32,44 @@ npm install -g prazod   # or pnpm add -g prazod
 npx prazod schema.prisma output.ts --modular
 ```
 
+## Reverse Generation (Zod -> Prisma)
+
+Prazod also supports generating a Prisma schema from existing Zod schemas. This is useful when you want to prototype with Zod first or migrate an existing Zod-based project to Prisma.
+
+```bash
+# Generate Prisma schema from Zod file
+prazod reverse ./src/zod-schemas.ts ./prisma/schema.prisma
+```
+
+### Supported Features
+
+- **Models**: Zod objects are converted to Prisma models.
+- **Enums**: Zod enums are converted to Prisma enums.
+- **Attributes**:
+  - `@id`: Inferred from `id` field or `.cuid()`/`.uuid()` validations.
+  - `@default`: Inferred from `.default()` values.
+  - `@updatedAt`: Inferred from `updatedAt` field name.
+  - `@unique`: Inferred from `.describe("@unique")`.
+  - `@relation`: Parsed from `.describe()` (e.g., `.describe("@relation(fields: [userId], references: [id])")`).
+  - `@map`: Parsed from `.describe()` (e.g., `.describe('@map("column_name")')`).
+  - Native Types: Parsed from `.describe()` (e.g., `.describe("@db.Text")`).
+- **Model Attributes**:
+  - `@@index`: Parsed from model documentation.
+  - `@@id`: Parsed from model documentation (for composite IDs).
+  - `@@unique`: Parsed from model documentation (for composite unique constraints).
+  - `@@fulltext`: Parsed from model documentation (for full-text search indexes).
+  - `@@map`: Parsed from model documentation.
+- **Types**:
+  - `z.string()` -> `String`
+  - `z.number()` -> `Float` (or `Int` if `.int()` is used)
+  - `z.boolean()` -> `Boolean`
+  - `z.date()` -> `DateTime`
+  - `z.enum()` -> `Enum`
+  - `z.lazy(() => Model)` -> `Model` (for relations)
+
+### Limitations
+
+- **Database Provider**: Defaults to `postgresql`. You may need to adjust the `datasource` block manually.
 ```shell
 # Local dev dependency (recommended for projects)
 pm install --save-dev prazod   # or pnpm add -D prazod
