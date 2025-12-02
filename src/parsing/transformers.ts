@@ -613,9 +613,11 @@ function extractModelFromRelationName(
 function zodObjectToPrismaModel(obj: ZodObject, matcher: PureFSTRelationMatcher): PrismaModel {
   const attributes: import("~/domain/prisma-ast").PrismaModelAttribute[] = [];
 
-  if (obj.documentation) {
+  let documentation = obj.documentation;
+
+  if (documentation) {
     // Parse @@index
-    const indexMatches = obj.documentation.matchAll(/@@index\(\[([^\]]+)\](?:,\s*name:\s*"([^"]+)")?\)/g);
+    const indexMatches = documentation.matchAll(/@@index\(\[([^\]]+)\](?:,\s*name:\s*"([^"]+)")?\)/g);
     for (const match of indexMatches) {
       if (match[1]) {
         attributes.push({
@@ -623,11 +625,12 @@ function zodObjectToPrismaModel(obj: ZodObject, matcher: PureFSTRelationMatcher)
           fields: match[1].split(",").map(s => s.trim()),
           ...(match[2] ? { name: match[2] } : {}),
         });
+        documentation = documentation.replace(match[0], "");
       }
     }
 
     // Parse @@unique (composite)
-    const uniqueMatches = obj.documentation.matchAll(/@@unique\(\[([^\]]+)\](?:,\s*name:\s*"([^"]+)")?\)/g);
+    const uniqueMatches = documentation.matchAll(/@@unique\(\[([^\]]+)\](?:,\s*name:\s*"([^"]+)")?\)/g);
     for (const match of uniqueMatches) {
       if (match[1]) {
         attributes.push({
@@ -635,11 +638,12 @@ function zodObjectToPrismaModel(obj: ZodObject, matcher: PureFSTRelationMatcher)
           fields: match[1].split(",").map(s => s.trim()),
           ...(match[2] ? { name: match[2] } : {}),
         });
+        documentation = documentation.replace(match[0], "");
       }
     }
 
     // Parse @@fulltext
-    const fullTextMatches = obj.documentation.matchAll(/@@fulltext\(\[([^\]]+)\](?:,\s*map:\s*"([^"]+)")?\)/g);
+    const fullTextMatches = documentation.matchAll(/@@fulltext\(\[([^\]]+)\](?:,\s*map:\s*"([^"]+)")?\)/g);
     for (const match of fullTextMatches) {
       if (match[1]) {
         attributes.push({
@@ -647,30 +651,36 @@ function zodObjectToPrismaModel(obj: ZodObject, matcher: PureFSTRelationMatcher)
           fields: match[1].split(",").map(s => s.trim()),
           ...(match[2] ? { map: match[2] } : {}),
         });
+        documentation = documentation.replace(match[0], "");
       }
     }
 
     // Parse @@id (composite)
-    const idMatch = obj.documentation.match(/@@id\(\[([^\]]+)\]\)/);
+    const idMatch = documentation.match(/@@id\(\[([^\]]+)\]\)/);
     if (idMatch && idMatch[1]) {
       attributes.push({
         _tag: PRISMA_TAGS.Id,
         fields: idMatch[1].split(",").map(s => s.trim()),
       });
+      documentation = documentation.replace(idMatch[0], "");
     }
 
     // Parse @@map
-    const mapMatch = obj.documentation.match(/@@map\("([^"]+)"\)/);
+    const mapMatch = documentation.match(/@@map\("([^"]+)"\)/);
     if (mapMatch && mapMatch[1]) {
       attributes.push({ _tag: PRISMA_TAGS.Map, name: mapMatch[1] });
+      documentation = documentation.replace(mapMatch[0], "");
     }
+
+    // Clean up documentation (trim whitespace and remove empty lines)
+    documentation = documentation.trim();
   }
 
   return {
     name: obj.name,
     fields: obj.fields.map(field => zodFieldToPrismaField(field, obj.name, matcher, obj.fields)),
     attributes,
-    ...(obj.documentation && { documentation: obj.documentation }),
+    ...(documentation && { documentation }),
   };
 }
 
