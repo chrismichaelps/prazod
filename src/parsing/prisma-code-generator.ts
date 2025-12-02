@@ -115,24 +115,6 @@ function generateFieldType(fieldType: PrismaFieldType): string {
   return fieldType;
 }
 
-function generateField(field: PrismaField): string {
-  const typeStr = generateFieldType(field.type);
-  const modifiers = field.modifiers.isList
-    ? "[]"
-    : field.modifiers.isOptional
-      ? "?"
-      : "";
-
-  const attributes = field.attributes
-    .map((attr) => generateFieldAttribute(attr, field.type))
-    .filter(Boolean)
-    .join(" ");
-
-  const paddedName = field.name.padEnd(16);
-  const paddedType = (typeStr + modifiers).padEnd(10);
-
-  return `  ${paddedName} ${paddedType} ${attributes}`.trimEnd();
-}
 
 function generateModelAttribute(attr: PrismaModelAttribute): string {
   switch (attr._tag) {
@@ -165,13 +147,46 @@ function generateModel(model: PrismaModel): string {
   const lines: string[] = [];
 
   if (model.documentation) {
-    lines.push(`// ${model.documentation}`);
+    const docLines = model.documentation.split("\n");
+    for (const line of docLines) {
+      lines.push(`/// ${line}`);
+    }
   }
 
   lines.push(`model ${model.name} {`);
 
+  // Calculate max widths for this model (like Prisma formatter does)
+  let maxNameWidth = 0;
+  let maxTypeWidth = 0;
+
   for (const field of model.fields) {
-    lines.push(generateField(field));
+    maxNameWidth = Math.max(maxNameWidth, field.name.length);
+    const typeStr = generateFieldType(field.type);
+    const modifiers = field.modifiers.isList ? "[]" : field.modifiers.isOptional ? "?" : "";
+    maxTypeWidth = Math.max(maxTypeWidth, (typeStr + modifiers).length);
+  }
+
+  // Add 1 space padding after longest name, align types
+  const nameWidth = maxNameWidth + 1;
+  const typeWidth = maxTypeWidth + 1;
+
+  for (const field of model.fields) {
+    const typeStr = generateFieldType(field.type);
+    const modifiers = field.modifiers.isList
+      ? "[]"
+      : field.modifiers.isOptional
+        ? "?"
+        : "";
+
+    const attributes = field.attributes
+      .map((attr) => generateFieldAttribute(attr, field.type))
+      .filter(Boolean)
+      .join(" ");
+
+    const paddedName = field.name.padEnd(nameWidth);
+    const paddedType = (typeStr + modifiers).padEnd(typeWidth);
+
+    lines.push(`  ${paddedName} ${paddedType} ${attributes}`.trimEnd());
   }
 
   if (model.attributes.length > 0) {
@@ -192,7 +207,10 @@ function generateEnum(enumDef: PrismaEnum): string {
   const lines: string[] = [];
 
   if (enumDef.documentation) {
-    lines.push(`// ${enumDef.documentation}`);
+    const docLines = enumDef.documentation.split("\n");
+    for (const line of docLines) {
+      lines.push(`/// ${line}`);
+    }
   }
 
   lines.push(`enum ${enumDef.name} {`);
